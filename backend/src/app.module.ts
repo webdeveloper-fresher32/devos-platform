@@ -13,6 +13,7 @@ import { SyncModule } from './sync/sync.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
 import { SprintsModule } from './sprints/sprints.module';
 import { TasksModule } from './tasks/tasks.module';
+import { ReposModule } from './repos/repos.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { TasksModule } from './tasks/tasks.module';
     WebhooksModule,
     SprintsModule,
     TasksModule,
+    ReposModule,
   ],
   controllers: [AppController],
   providers: [AppService],

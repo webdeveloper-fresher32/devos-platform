@@ -14,7 +14,7 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
   ) {
     const clientID = configService.get<string>('GITHUB_CLIENT_ID', 'mock_id');
     const clientSecret = configService.get<string>('GITHUB_CLIENT_SECRET', 'mock_secret');
-    const callbackURL = configService.get<string>('GITHUB_CALLBACK_URL', 'http://localhost:3000/api/auth/callback/github');
+    const callbackURL = configService.get<string>('GITHUB_CALLBACK_URL', 'http://localhost:3001/auth/github/callback');
 
     super({
       clientID,
