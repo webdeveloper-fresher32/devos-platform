@@ -37,6 +37,25 @@ export interface GithubIssueInfo {
 export class GithubService {
   private readonly logger = new Logger(GithubService.name);
 
+  async fetchUserProfile(accessToken: string) {
+    const octokit = new Octokit({ auth: accessToken });
+    const response = await octokit.rest.users.getAuthenticated();
+    return response.data;
+  }
+
+  async fetchUserOrgs(accessToken: string) {
+    const octokit = new Octokit({ auth: accessToken });
+    try {
+      const response = await octokit.rest.orgs.listForAuthenticatedUser({
+        per_page: 100,
+      });
+      return response.data;
+    } catch (err) {
+      this.logger.error('Failed to fetch user organizations from GitHub', err);
+      return [];
+    }
+  }
+
   private getOctokit(pat?: string): Octokit | null {
     const token = pat || process.env.GITHUB_PAT;
     if (!token) {

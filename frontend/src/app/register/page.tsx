@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '../../lib/api';
+import { useAuthStore } from '../../store/authStore';
 import { ShieldCheck, UserPlus, AlertCircle, Loader2 } from 'lucide-react';
 
 export default function RegisterPage() {
@@ -13,6 +14,14 @@ export default function RegisterPage() {
   const [name, setName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const accessToken = useAuthStore((state) => state.accessToken);
+
+  useEffect(() => {
+    if (accessToken) {
+      router.push('/dashboard');
+    }
+  }, [accessToken, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

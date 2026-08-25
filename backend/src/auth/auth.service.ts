@@ -1,14 +1,18 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
+import { GithubService } from '../github/github.service';
 import * as bcrypt from 'bcrypt';
 import { LoginDto, RegisterDto } from './dto/auth.dto';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly githubService: GithubService,
   ) {}
 
   async validateGithubUser(details: {
@@ -16,6 +20,7 @@ export class AuthService {
     email: string;
     name: string;
     avatarUrl: string;
+    accessToken: string;
   }) {
     // Check if user already exists by GitHub ID
     let user = await this.prisma.user.findUnique({
@@ -48,6 +53,58 @@ export class AuthService {
           },
         });
       }
+    }
+
+    // Dynamic Organization Auto-Sync from GitHub
+    try {
+      this.logger.log(`Synchronizing GitHub organizations for user: ${details.email}`);
+      const profile = await this.githubService.fetchUserProfile(details.accessToken);
+      const personalOrgName = profile.login;
+
+      const githubOrgs = await this.githubService.fetchUserOrgs(details.accessToken);
+
+      const orgsToSync = [
+        { login: personalOrgName, name: `${personalOrgName}'s Workspace` },
+        ...githubOrgs.map(org => ({ login: org.login, name: org.login })),
+      ];
+
+      for (const item of orgsToSync) {
+        const slug = item.login.toLowerCase();
+
+        // Upsert Organization
+        let org = await this.prisma.organization.findUnique({
+          where: { slug },
+        });
+
+        if (!org) {
+          org = await this.prisma.organization.create({
+            data: {
+              name: item.name,
+              slug,
+            },
+          });
+        }
+
+        // Upsert Membership
+        const existingMembership = await this.prisma.membership.findFirst({
+          where: {
+            userId: user.id,
+            orgId: org.id,
+          },
+        });
+
+        if (!existingMembership) {
+          await this.prisma.membership.create({
+            data: {
+              userId: user.id,
+              orgId: org.id,
+              role: 'OWNER',
+            },
+          });
+        }
+      }
+    } catch (err) {
+      this.logger.error('Failed to sync organizations from GitHub during auth callback', err);
     }
 
     return user;

@@ -19,6 +19,14 @@ function LoginContent() {
   const [registeredNotice, setRegisteredNotice] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const accessToken = useAuthStore((state) => state.accessToken);
+
+  useEffect(() => {
+    if (accessToken) {
+      router.push('/dashboard');
+    }
+  }, [accessToken, router]);
+
   useEffect(() => {
     if (searchParams.get('registered') === 'true') {
       setRegisteredNotice(true);

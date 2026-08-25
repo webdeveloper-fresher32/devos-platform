@@ -7,6 +7,8 @@ import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { GithubStrategy } from './strategies/github.strategy';
 
+import { GithubModule } from '../github/github.module';
+
 @Module({
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),
@@ -18,6 +20,7 @@ import { GithubStrategy } from './strategies/github.strategy';
         signOptions: { expiresIn: '1h' },
       }),
     }),
+    GithubModule,
   ],
   providers: [AuthService, JwtStrategy, GithubStrategy],
   controllers: [AuthController],

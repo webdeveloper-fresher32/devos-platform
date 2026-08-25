@@ -36,6 +36,7 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
         email,
         name,
         avatarUrl,
+        accessToken,
       });
 
       done(null, user);
